@@ -8,6 +8,7 @@ namespace reinforcement_learning {  namespace name {
       const char *const  MODEL_IMPLEMENTATION    = "model.implementation";       // VW vs other ML
       const char *const  MODEL_BACKGROUND_REFRESH = "model.backgroundrefresh";
       const char *const  VW_CMDLINE              = "vw.commandline";
+      const char *const  ONNX_THREADPOOL_SIZE    = "onnx.threadpool";
       const char *const  INITIAL_EPSILON         = "initial_exploration.epsilon";
       const char *const  INTERACTION_EH_HOST     = "interaction.eventhub.host";
       const char *const  INTERACTION_EH_NAME     = "interaction.eventhub.name";
@@ -47,6 +48,7 @@ namespace reinforcement_learning {  namespace value {
       const char *const FILE_MODEL_DATA = "FILE_MODEL_DATA";
       const char *const VW                 = "VW";
       const char *const PASSTHROUGH_PDF_MODEL = "PASSTHROUGH_PDF";
+      const char *const ONNXRUNTIME_MODEL = "ONNXRUNTIME";
       const char *const OBSERVATION_EH_SENDER = "OBSERVATION_EH_SENDER";
       const char *const INTERACTION_EH_SENDER = "INTERACTION_EH_SENDER";
       const char *const OBSERVATION_FILE_SENDER = "OBSERVATION_FILE_SENDER";

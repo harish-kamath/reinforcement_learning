@@ -1,5 +1,6 @@
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 find_package(FlatBuffers REQUIRED)
+find_package(OnnxRuntime REQUIRED)
 
 set(RL_FLAT_BUFFER_FILES
 "${CMAKE_CURRENT_SOURCE_DIR}/schema/Metadata.fbs"
@@ -112,9 +113,10 @@ target_include_directories( rlclientlib
                             PRIVATE
                             ${CMAKE_CURRENT_SOURCE_DIR}
                             ${FLATBUFFERS_INCLUDE_DIRS}
+                            ${ONNXRUNTIME_INCLUDE_DIRS}
                             ${CMAKE_CURRENT_SOURCE_DIR}/../ext_libs/date
                             )
-target_link_libraries(rlclientlib PUBLIC Boost::system vw OpenSSL::SSL OpenSSL::Crypto cpprestsdk::cpprest)
+target_link_libraries(rlclientlib PUBLIC Boost::system vw OpenSSL::SSL OpenSSL::Crypto cpprestsdk::cpprest onnxruntime)
 # Consuming Boost uuid requires BCrypt, normally this is automatically linked but vcpkg turns this feature off.
 if(WIN32)
   target_link_libraries(rlclientlib PUBLIC bcrypt)

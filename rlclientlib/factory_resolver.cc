@@ -68,6 +68,13 @@ namespace reinforcement_learning {
     return error_code::success;
   }
 
+  template <>
+  int model_create<onnx_model>(m::i_model** retval, const u::configuration& config, i_trace* trace_logger, api_status* status)
+  {
+    config.get_int(name::ONNX_THREADPOOL_SIZE, 10);
+    *retval = new model_t(trace_logger);
+  }
+
   int null_tracer_create(i_trace** retval, const u::configuration&, i_trace* trace_logger, api_status* status);
   int console_tracer_create(i_trace** retval, const u::configuration&, i_trace* trace_logger, api_status* status);
 
@@ -127,6 +134,7 @@ namespace reinforcement_learning {
 
     model_factory.register_type(value::VW, model_create<m::vw_model>);
     model_factory.register_type(value::PASSTHROUGH_PDF_MODEL, model_create<m::pdf_model>);
+    model_factory.register_type(value::ONNXRUNTIME_MODEL, model_create<m::onnx_model>)
     
     trace_logger_factory.register_type(value::NULL_TRACE_LOGGER, null_tracer_create);
     trace_logger_factory.register_type(value::CONSOLE_TRACE_LOGGER, console_tracer_create);
