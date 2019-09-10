@@ -97,12 +97,19 @@ namespace reinforcement_learning { namespace utility { namespace config {
   int create_from_json(const std::string& config_json, configuration& cc, i_trace* trace, api_status* status) {
     static const std::map<std::string, std::string> legacy_translation_mapping = {
       { "ApplicationID"             , name::APP_ID },
+      { "applicationID"             , name::APP_ID },
       { "ModelBlobUri"              , name::MODEL_BLOB_URI },
+      { "modelBlobUri"              , name::MODEL_BLOB_URI },
       { "SendHighMaterMark"         , name::INTERACTION_SEND_HIGH_WATER_MARK },
+      { "sendHighMaterMark"         , name::INTERACTION_SEND_HIGH_WATER_MARK },
       { "SendBatchIntervalMs"       , name::INTERACTION_SEND_BATCH_INTERVAL_MS },
+      { "sendBatchIntervalMs"       , name::INTERACTION_SEND_BATCH_INTERVAL_MS },
       { "InitialExplorationEpsilon" , name::INITIAL_EPSILON },
+      { "initialExplorationEpsilon" , name::INITIAL_EPSILON },
       { "ModelRefreshIntervalMs"    , name::MODEL_REFRESH_INTERVAL_MS },
-      { "QueueMode"                 , name::QUEUE_MODE } // expect either DROP or BLOCK, default is DROP
+      { "modelRefreshIntervalMs"    , name::MODEL_REFRESH_INTERVAL_MS },
+      { "QueueMode"                 , name::QUEUE_MODE }, // expect either DROP or BLOCK, default is DROP
+      { "queueMode"                 , name::QUEUE_MODE } // expect either DROP or BLOCK, default is DROP
     };
 
     const std::set<std::string> deprecated = {

@@ -28,9 +28,17 @@ add_executable(rltest
 )
 
 # Add the include directories from rlclientlib target for testing
-target_include_directories(rltest PRIVATE $<TARGET_PROPERTY:rlclientlib,INCLUDE_DIRECTORIES>)
+target_include_directories(rltest 
+  PRIVATE 
+    $<TARGET_PROPERTY:rlclientlib,INCLUDE_DIRECTORIES>
+)
 
-target_link_libraries(rltest PRIVATE
-  rlclientlib fakeit Boost::unit_test_framework Boost::system)
+target_link_libraries(rltest 
+  PRIVATE
+    rlclientlib
+    fakeit 
+    Boost::unit_test_framework 
+    Boost::system
+)
 
 add_test(rltest rltest)
