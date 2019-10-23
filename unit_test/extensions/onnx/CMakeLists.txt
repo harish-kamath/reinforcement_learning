@@ -8,8 +8,14 @@ add_executable(rltest-onnx
 )
 
 set(ONNX_EXTENSION_TEST_RESOURCE_FILES
-  ${CMAKE_CURRENT_SOURCE_DIR}/mnist_data/mnist_test_data.txt
+  #${CMAKE_CURRENT_SOURCE_DIR}/mnist_data/mnist_test_data.txt
   ${CMAKE_CURRENT_SOURCE_DIR}/mnist_data/mnist_model.onnx
+)
+
+add_custom_command(
+  TARGET rltest-onnx
+  COMMAND ${CMAKE_COMMAND} -E make_directory
+          ${CMAKE_CURRENT_BINARY_DIR}/mnist_data
 )
 
 add_custom_command(
