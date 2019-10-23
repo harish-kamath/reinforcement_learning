@@ -21,7 +21,7 @@ namespace reinforcement_learning { namespace onnx {
     void* param, OrtLoggingLevel severity, const char* category, const char* logid, const char* code_location,
     const char* message)
   {
-    i_trace* trace_logger = (i_trace*)param;
+    i_trace* trace_logger = static_cast<i_trace*>(param);
 
     int loglevel = LEVEL_ERROR;
     switch (severity)
@@ -75,7 +75,7 @@ namespace reinforcement_learning { namespace onnx {
         RETURN_ERROR_LS(_trace_logger, status, model_update_error) << "Empty model data.";
       }
 
-      new_session =  new Ort::Session(_env, data.data(), data.data_sz(), _session_options);
+      new_session = new Ort::Session(_env, data.data(), data.data_sz(), _session_options);
       
       // Validate that the model makes sense
       // Rules: 
@@ -164,10 +164,7 @@ namespace reinforcement_learning { namespace onnx {
     OnnxRtInputContext input_context(allocator_info);
     if (_parse_feature_string)
     {
-      read_tensor_notation(features, &input_context);
-      
-      //TODO: Error checking
-      //RETURN_ERROR_LS(_trace_logger, status, invalid_argument) << "Input could not be parsed.";
+      RETURN_IF_FAIL(read_tensor_notation(features, &input_context, status));
     }
     else
     {
@@ -178,6 +175,7 @@ namespace reinforcement_learning { namespace onnx {
     
     Ort::RunOptions run_options{nullptr};
 
+    std::vector<const char*> input_names = input_context.input_names();
     std::vector<Ort::Value> inputs = input_context.inputs();
     if (inputs.size() != input_context.input_count())
     {
@@ -185,7 +183,7 @@ namespace reinforcement_learning { namespace onnx {
       RETURN_ERROR_LS(_trace_logger, status, model_rank_error) << "Could not interpret input values to match expected inputs.";
     }
 
-    auto outputs = local_session->Run(Ort::RunOptions{nullptr}, input_context.input_names(), input_context.inputs().data(), input_context.input_count(), (const char* const*)&_output_name, 1);
+    auto outputs = local_session->Run(Ort::RunOptions{nullptr}, input_names.data(), inputs.data(), input_context.input_count(), (const char* const*)&_output_name, 1);
     assert(outputs.size() > _output_index && outputs[_output_index].IsTensor());
 
     // We cannot be const-correct here, because the only way to read data from the tensor
@@ -195,7 +193,7 @@ namespace reinforcement_learning { namespace onnx {
     size_t num_elements = target_output.GetTensorTypeAndShapeInfo().GetElementCount();
     float* floatarr = target_output.GetTensorMutableData<float>();
 
-    for (int i = 0; i < num_elements; i++)
+    for (size_t i = 0; i < num_elements; i++)
     {
       action_ids.push_back(i);
       action_pdf.push_back(floatarr[i]);

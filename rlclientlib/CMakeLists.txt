@@ -119,7 +119,6 @@ target_include_directories( rlclientlib
                             PRIVATE
                             ${CMAKE_CURRENT_SOURCE_DIR}
                             ${FLATBUFFERS_INCLUDE_DIRS}
-                            ${CPPRESTSDK_INCLUDE_DIRS}
                             ${CMAKE_CURRENT_SOURCE_DIR}/../ext_libs/date
                             )
 target_link_libraries(rlclientlib PUBLIC Boost::system vw OpenSSL::SSL OpenSSL::Crypto cpprestsdk::cpprest PRIVATE RapidJSON)

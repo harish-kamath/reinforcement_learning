@@ -53,8 +53,9 @@ inline void validate_input_context(o::OnnxRtInputContext& input_context, size_t 
 {
   size_t input_count = input_context.input_count();
   BOOST_REQUIRE_EQUAL(input_count, expected_count); 
-  const char* const* names_start = input_context.input_names();
-  BOOST_REQUIRE_EQUAL_COLLECTIONS(names_start, names_start + input_count, expected_names.cbegin(), expected_names.cend());
+  std::vector<const char*> names = input_context.input_names();
+  BOOST_REQUIRE_EQUAL(names.size(), input_count);
+  BOOST_REQUIRE_EQUAL_COLLECTIONS(names.cbegin(), names.cend(), expected_names.cbegin(), expected_names.cend());
 }
 
 inline void validate_empty(o::OnnxRtInputContext& input_context)
@@ -93,7 +94,7 @@ inline void validate_tensors(o::OnnxRtInputContext& input_context, expectations<
 {
   std::map<string_t, size_t> input_name_map;
   size_t expected_input_count = input_context.input_count();
-  const char* const* input_names = input_context.input_names();
+  std::vector<const char*> input_names = input_context.input_names();
   
   for (size_t i = 0; i < expected_input_count; i++)
   {
@@ -126,17 +127,17 @@ template <bool roundtrip = false>
 std::string encode_tensor_data(const dimensions& dimensions, const tensor_raw& values)
 {
   unsigned char* dimensions_buffer = (unsigned char*)dimensions.data();
-  o::bytes dimensions_bytes(dimensions_buffer, dimensions_buffer + byte_size(dimensions));
+  o::bytes_t dimensions_bytes(dimensions_buffer, dimensions_buffer + byte_size(dimensions));
   std::string dimensions_base64 = ::utility::conversions::to_base64(dimensions_bytes);
   
   unsigned char* values_buffer = (unsigned char*)values.data();
-  o::bytes values_bytes(values_buffer, values_buffer + byte_size(values));
+  o::bytes_t values_bytes(values_buffer, values_buffer + byte_size(values));
   std::string values_base64 = ::utility::conversions::to_base64(values_bytes);
   
   if (roundtrip)
   {
-    o::bytes dimensions_bytes_back = ::utility::conversions::from_base64(dimensions_base64);
-    o::bytes values_bytes_back = ::utility::conversions::from_base64(values_base64);
+    o::bytes_t dimensions_bytes_back = ::utility::conversions::from_base64(dimensions_base64);
+    o::bytes_t values_bytes_back = ::utility::conversions::from_base64(values_base64);
     
     BOOST_REQUIRE_EQUAL_COLLECTIONS(values_bytes.cbegin(), values_bytes.cend(), values_bytes_back.cbegin(), values_bytes_back.cend());
     

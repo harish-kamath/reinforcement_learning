@@ -38,25 +38,46 @@ namespace tokens {
   const char CLOSE_CBRACKET = '}';
 }
 
-using bytes = std::vector<unsigned char>;
+class TensorParserError
+{
+private:
+  const char* ERROR_PREFIX = "Error parsing TensorNotation at position ";
 
-#define NO_ERROR_OR_RETURN(val) \
-  if (_has_error) { \
-    return val; \
-  }
-//!define# PARSER_HEADER
+public:
+  TensorParserError(size_t line, size_t col) : _message_builder{ERROR_PREFIX} 
+  {
+    _message_builder << '(' << line << ":" << col << "): ";
+  };
 
-#define NO_ERROR_OR_RETURN_DEFAULT(val) \
-  if (_has_error) { \
-    return val; \
+  TensorParserError(TensorParserError& rhs) : _message_builder{rhs._message_builder.str()}
+  {
+  };
+
+  ~TensorParserError() = default;
+
+  template <typename T>
+  TensorParserError& operator<<(const T& value)
+  {
+    _message_builder << value;
+    return *this;
   }
-//!define# PARSER_HEADER
+
+  std::string message()
+  {
+    return _message_builder.str();
+  }
+
+private:
+  std::stringstream _message_builder;
+};
 
 class TensorParser
 {
 public:
   // warnings/errors?
   TensorParser(const char* tensor_notation, OnnxRtInputContext& input_context);
+
+  bool cached_parse();
 
   inline bool succeeded()
   {
@@ -71,8 +92,6 @@ public:
 private:
   inline void skip_whitespace()
   {
-    NO_ERROR_OR_RETURN();
-
     while (*_reading_head == ' ' 
         || *_reading_head == '\t' 
         || *_reading_head == '\r'
@@ -85,43 +104,42 @@ private:
     }
   }
 
-  inline std::stringstream error_builder()
+  inline TensorParserError make_error()
   {
-    std::stringstream result("Error parsing TensorNotation at position ");
+    size_t line = 1;
+    size_t col = 1;
 
-    // TODO: Error reporting here should be line/col based, rather than position-based.
-    result << (_reading_head - _parse_buffer) << ": ";
+    std::for_each(_parse_buffer, _reading_head + 1, 
+      [&line, &col](const char& c)
+      {
+        if (c == '\n')
+        {
+          line++;
+          col = 1;
+        }
+        else
+        {
+          col++;
+        }
+      });
 
-    return result;
+    return {line, col};
   }
 
-  inline void set_error(std::string error_message)
+  inline void read_character(char c)
   {
-    _has_error = true;
-    _error_message = error_message;
-  }
-
-  template <char c>
-  inline void read_character()
-  {
-    NO_ERROR_OR_RETURN();
-
     if (*_reading_head == c)
     {
       _reading_head++;
     }
     else
     {
-      auto err_stream = error_builder();
-      err_stream << "Expecting '" << c << "'; actual '" << *_reading_head << "'.";
-      set_error(err_stream.str());
+      throw (make_error() << "Expecting '" << c << "'; actual '" << *_reading_head << "'.");
     }
   }
 
   inline bool is_base64(const char c) const
   {
-    NO_ERROR_OR_RETURN_DEFAULT(false);
-
     // I really wish ASCII was a nicer encoding (i.e. alphanumeric = contiguous range) - it 
     // would make base64 much easier to parse without doing a lot of superfluous operations.
     return (c == '+' /* 43 */ 
@@ -132,10 +150,8 @@ private:
         || c == '=' /* padding character */);
   }
 
-  inline bytes read_base64()
+  inline bytes_t read_base64()
   {
-    NO_ERROR_OR_RETURN_DEFAULT(bytes());
-
     _token_start = _reading_head;
 
     // scan BASE64 sequence
@@ -149,21 +165,17 @@ private:
 
     if (base64string.length() % 4 != 0)
     {
-      auto err_stream = error_builder();
-      err_stream << "Base64 string \"" << base64string << "\" length is not divisible by 4: " << base64string.length() << ".";
-      set_error(err_stream.str());
+      throw (make_error() << "Base64 string \"" << base64string << "\" length is not divisible by 4: " << base64string.length() << ".");
     }
 
-    bytes conversion = ::utility::conversions::from_base64(base64string);
+    bytes_t conversion = ::utility::conversions::from_base64(base64string);
     return conversion;
   }
 
   inline std::string read_tensor_name()
   {
-    NO_ERROR_OR_RETURN_DEFAULT(std::string(""));
-
     // Consume \'
-    read_character<tokens::SQUOTE>();
+    read_character(tokens::SQUOTE);
     
     _token_start = _reading_head;
 
@@ -189,17 +201,15 @@ private:
     const char* token_end = _reading_head;
 
     // Consume \'
-    read_character<tokens::SQUOTE>();
+    read_character(tokens::SQUOTE);
 
     return std::string(_token_start, token_end - _token_start);
   }
 
-  inline tensor_data read_tensor_data()
+  inline tensor_data_t read_tensor_data()
   {
-    NO_ERROR_OR_RETURN_DEFAULT(tensor_data(bytes(), bytes()))
-
     // Consume \'
-    read_character<tokens::SQUOTE>();
+    read_character(tokens::SQUOTE);
 
     // TODO: Support reading type information for the tensor (and later map/sequence)
     // See value_t definition in tensor_notation.h
@@ -209,17 +219,17 @@ private:
     // read_character<';'>();
     
     // Read base_64(int_64t[]) until ';'
-    bytes dimensions_base64 = read_base64();
+    bytes_t dimensions_base64 = read_base64();
 
     // Consume ';' - also another bit of validation that dimensions were parsed 
     // meaningfully
-    read_character<tokens::SEMICOLON>();
+    read_character(tokens::SEMICOLON);
 
     // Read base_64(float[]) until '\''
-    bytes values_base64 = read_base64();
+    bytes_t values_base64 = read_base64();
 
     // Consume \'
-    read_character<tokens::SQUOTE>();
+    read_character(tokens::SQUOTE);
 
     // Should we do the base64 parse here?
     return std::make_pair(dimensions_base64, values_base64);
@@ -227,46 +237,40 @@ private:
 
   inline void read_tensor()
   {
-    NO_ERROR_OR_RETURN();
-
     std::string name = read_tensor_name();
 
     skip_whitespace();
 
-    read_character<tokens::COLON>();
+    read_character(tokens::COLON);
 
     skip_whitespace();
 
-    tensor_data value = read_tensor_data();
+    tensor_data_t value = read_tensor_data();
 
     _parse_context.push_input(name, value);
   }
 
   inline void read_tensor_list()
   {
-    NO_ERROR_OR_RETURN();
-
     skip_whitespace();
 
-    read_character<tokens::OPEN_CBRACKET>();
+    read_character(tokens::OPEN_CBRACKET);
     
     skip_whitespace();
 
     while (*_reading_head != tokens::CLOSE_CBRACKET 
         && *_reading_head != tokens::NULL_TERMINATOR)
     {
-      NO_ERROR_OR_RETURN();
-
       read_tensor();
       skip_whitespace();
       if (*_reading_head == tokens::COMMA)
       {
-        read_character<tokens::COMMA>();
+        read_character(tokens::COMMA);
         skip_whitespace();
       }
     }
 
-    read_character<tokens::CLOSE_CBRACKET>();
+    read_character(tokens::CLOSE_CBRACKET);
   }
 
 private:
@@ -277,6 +281,7 @@ private:
 
   OnnxRtInputContext& _parse_context;
 
+  bool _has_parsed;
   bool _has_error;
   std::string _error_message;
 };
@@ -286,25 +291,43 @@ TensorParser::TensorParser(const char* tensor_notation, OnnxRtInputContext& inpu
   _reading_head{tensor_notation}, 
   _token_start{tensor_notation}, 
   _parse_context{input_context},
+  _has_parsed{false},
   _has_error{false},
   _error_message{""}
 {
-  if (_parse_buffer && *_parse_buffer != tokens::NULL_TERMINATOR)
+}
+
+bool TensorParser::cached_parse()
+{
+  if (_has_parsed)
   {
-    read_tensor_list();
+    return !_has_error;
   }
+
+  try
+  {
+    if (_parse_buffer && *_parse_buffer != tokens::NULL_TERMINATOR)
+    {
+      read_tensor_list();
+    }
+  }
+  catch (const TensorParserError& tpe)
+  {
+    _has_error = true;
+  }
+
+  return !_has_error;
 }
 
 int read_tensor_notation(const char* tensor_notation, OnnxRtInputContext* input_context, api_status* status)
 {
   TensorParser parser(tensor_notation, *input_context);
-
-  if (!parser.succeeded())
+  if (!parser.cached_parse())
   {
     RETURN_ERROR_LS(nullptr, status, extension_error)
       << "OnnxExtension: Failed to deserialize tensor: "
       << parser.error_message();
-  };
+  }
 
   return error_code::success;
 }
