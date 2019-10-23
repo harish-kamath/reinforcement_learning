@@ -5,6 +5,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include "test_helpers.h"
+#include "test_data.h"
 #include "mock_helpers.h"
 
 #include "onnx_extension.h"
@@ -62,7 +63,7 @@ BOOST_AUTO_TEST_CASE(mnist_inference_smoke_test)
   u::config::create_from_json(JSON_CFG, config, nullptr, &status);
 
   // TODO: This should be a CMake-configure set value
-  config.set("model_file_loader.file_name", "/root/rl/unit_test/extensions/onnx/mnist_data/mnist_model.onnx");
+  config.set("model_file_loader.file_name", TEST_DATA(mnist_data/mnist_model.onnx));
   
   require_success(status);
 

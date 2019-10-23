@@ -1,4 +1,9 @@
 
+set(rltestonnx_DATA_ROOT ${CMAKE_CURRENT_BINARY_DIR})
+file(TO_NATIVE_PATH "/" rltestonnx_SYSTEM_PATH_SEPARATOR)
+
+configure_file(test_data.h.in test_data.h)
+
 # If compiling on windows add the stdafx file
 add_executable(rltest-onnx
   main.cc
@@ -8,6 +13,7 @@ add_executable(rltest-onnx
 )
 
 set(ONNX_EXTENSION_TEST_RESOURCE_FILES
+  # TODO: Add statistical testing. Not completely clear what the target should be, yet.
   #${CMAKE_CURRENT_SOURCE_DIR}/mnist_data/mnist_test_data.txt
   ${CMAKE_CURRENT_SOURCE_DIR}/mnist_data/mnist_model.onnx
 )
@@ -15,14 +21,14 @@ set(ONNX_EXTENSION_TEST_RESOURCE_FILES
 add_custom_command(
   TARGET rltest-onnx
   COMMAND ${CMAKE_COMMAND} -E make_directory
-          ${CMAKE_CURRENT_BINARY_DIR}/mnist_data
+          ${rltestonnx_DATA_ROOT}/mnist_data
 )
 
 add_custom_command(
   TARGET rltest-onnx
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
           ${ONNX_EXTENSION_TEST_RESOURCE_FILES}
-          ${CMAKE_CURRENT_BINARY_DIR}/mnist_data
+          ${rltestonnx_DATA_ROOT}/mnist_data
 )
 
 # Devirtualization is an optimization that changes the vtable if the compiler decides a function
@@ -39,6 +45,7 @@ target_include_directories(rltest-onnx
   PRIVATE 
     $<TARGET_PROPERTY:rlclientlib,INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:rlclientlib-onnx,INCLUDE_DIRECTORIES>
+    ${CMAKE_CURRENT_BINARY_DIR} # There are configured files here
 )
 
 target_link_libraries(rltest-onnx 
