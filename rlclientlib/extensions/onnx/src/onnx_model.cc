@@ -50,19 +50,14 @@ namespace reinforcement_learning { namespace onnx {
     TRACE_LOG(trace_logger, loglevel, buf.str());
   }
 
-  onnx_model::onnx_model(i_trace* trace_logger, const char* app_id, const char* output_name, int thread_pool_size, bool parse_feature_string) :
+  onnx_model::onnx_model(i_trace* trace_logger, const char* app_id, const char* output_name, bool parse_feature_string) :
     _trace_logger(trace_logger),
     _output_name(output_name),
     _parse_feature_string(parse_feature_string),
     _env(Ort::Env(ORT_LOGGING_LEVEL_VERBOSE, app_id, OrtLogCallback, trace_logger)),
-    _allocator(Ort::Allocator::CreateDefault())
+    _allocator(Ort::AllocatorWithDefaultOptions())
   {
-    _session_options.SetThreadPoolSize(thread_pool_size);
-
-    // 0 -> To disable all optimizations
-    // 1 -> To enable basic optimizations (Such as redundant node removals)
-    // 2 -> To enable all optimizations (Includes level 1 + more complex optimizations like node fusions)
-    _session_options.SetGraphOptimizationLevel(2); // Make it FAST
+    _session_options.SetGraphOptimizationLevel(GraphOptimizationLevel::ORT_ENABLE_ALL); // Make it FAST
   }
 
   int onnx_model::update(const model_management::model_data& data, bool& model_ready, api_status* status) {
@@ -159,9 +154,10 @@ namespace reinforcement_learning { namespace onnx {
     }
     
     // TODO: Support GPU scoring
-    Ort::AllocatorInfo allocator_info = Ort::AllocatorInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+    Ort::MemoryInfo memory_info = Ort::MemoryInfo::CreateCpu(OrtAllocatorType::OrtArenaAllocator, 
+                                                             OrtMemType::OrtMemTypeDefault);
     
-    OnnxRtInputContext input_context(allocator_info);
+    OnnxRtInputContext input_context(memory_info);
     if (_parse_feature_string)
     {
       RETURN_IF_FAIL(read_tensor_notation(features, &input_context, status));

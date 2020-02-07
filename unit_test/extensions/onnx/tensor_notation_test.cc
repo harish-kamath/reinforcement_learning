@@ -10,8 +10,8 @@
 
 BOOST_AUTO_TEST_CASE(null_pointer) {
   // Arrange
-  Ort::AllocatorInfo allocator_info{nullptr};
-  o::OnnxRtInputContext ic{allocator_info};
+  Ort::MemoryInfo memory_info{nullptr};
+  o::OnnxRtInputContext ic{memory_info};
 
   // Act
   r::api_status status;
@@ -24,8 +24,8 @@ BOOST_AUTO_TEST_CASE(null_pointer) {
 
 BOOST_AUTO_TEST_CASE(empty_string) {
   // Arrange
-  Ort::AllocatorInfo allocator_info{nullptr};
-  o::OnnxRtInputContext ic{allocator_info};
+  Ort::MemoryInfo memory_info{nullptr};
+  o::OnnxRtInputContext ic{memory_info};
 
   // Act
   r::api_status status;
@@ -38,8 +38,8 @@ BOOST_AUTO_TEST_CASE(empty_string) {
 
 BOOST_AUTO_TEST_CASE(empty_object) {
   // Arrange
-  Ort::AllocatorInfo allocator_info{nullptr};
-  o::OnnxRtInputContext ic{allocator_info};
+  Ort::MemoryInfo memory_info{nullptr};
+  o::OnnxRtInputContext ic{memory_info};
 
   // Act
   r::api_status status;
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(simple_vector)
   std::vector<int64_t> expected_dimensions({4});
   std::vector<float> expected_values({1.0f, 2.1f, 4.2f, -9.1f});
 
-  o::OnnxRtInputContext ic{TestAllocatorInfo};
+  o::OnnxRtInputContext ic{TestMemoryInfo};
 
   // Act
   r::api_status status;
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(roundtrip_tensor_data)
 }
 
 template <typename string_t>
-inline void run_tensor_notation_test(Ort::AllocatorInfo& allocator_info, expectations<string_t> expectations)
+inline void run_tensor_notation_test(Ort::MemoryInfo& memory_info, expectations<string_t> expectations)
 {
   // Arrange
   std::string tensor_notation = create_tensor_notation(expectations);
@@ -99,7 +99,7 @@ inline void run_tensor_notation_test(Ort::AllocatorInfo& allocator_info, expecta
       input_names.push_back(std::get<0>(expectation));
     });
 
-  o::OnnxRtInputContext ic{allocator_info};
+  o::OnnxRtInputContext ic{memory_info};
 
   // Act
   r::api_status status;
@@ -128,5 +128,5 @@ BOOST_AUTO_TEST_CASE(higher_rank_tensor)
 
   expectations<std::string> expectations{ std::make_tuple(input_name, dims, rawdata) };
 
-  run_tensor_notation_test(TestAllocatorInfo, expectations);
+  run_tensor_notation_test(TestMemoryInfo, expectations);
 }

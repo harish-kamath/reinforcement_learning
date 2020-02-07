@@ -18,7 +18,7 @@
 namespace r = reinforcement_learning;
 namespace o = reinforcement_learning::onnx;
 
-static Ort::AllocatorInfo TestAllocatorInfo = Ort::AllocatorInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+static Ort::MemoryInfo TestMemoryInfo = Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
 
 using dimensions = std::vector<int64_t>;
 using tensor_raw = std::vector<float>;
@@ -146,7 +146,7 @@ std::string encode_tensor_data(const dimensions& dimensions, const tensor_raw& v
 
     BOOST_REQUIRE_EQUAL_COLLECTIONS(values_data_back, values_data_back + values_count, values.cbegin(), values.cend());
 
-    Ort::Value tensor = Ort::Value::CreateTensor<float>(TestAllocatorInfo, values_data_back, values_count, dimensions.data(), dimensions.size());
+    Ort::Value tensor = Ort::Value::CreateTensor<float>(TestMemoryInfo, values_data_back, values_count, dimensions.data(), dimensions.size());
     float* tensor_data = tensor.GetTensorMutableData<float>();
 
     BOOST_REQUIRE_EQUAL_COLLECTIONS(tensor_data, tensor_data + values_count, values.cbegin(), values.cend());

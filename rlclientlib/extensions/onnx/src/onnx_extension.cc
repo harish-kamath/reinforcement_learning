@@ -23,10 +23,9 @@ namespace reinforcement_learning { namespace onnx {
       RETURN_ERROR_LS(trace_logger, status, inference_configuration_error) << "Output name is not provided in the configuration.";
     }
 
-    int onnx_threadpool_size = config.get_int(name::ONNX_THREADPOOL_SIZE, 10);
     bool parse_feature_string = config.get_bool(name::ONNX_PARSE_FEATURE_STRING, true);
   
-    *retval = new onnx_model(trace_logger, app_id, output_name, onnx_threadpool_size, parse_feature_string);
+    *retval = new onnx_model(trace_logger, app_id, output_name, parse_feature_string);
 
     return error_code::success;
   };

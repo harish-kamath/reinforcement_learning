@@ -44,7 +44,7 @@ namespace reinforcement_learning { namespace onnx {
   class OnnxRtInputContext
   {
   public:
-    OnnxRtInputContext(const Ort::AllocatorInfo& allocator_info) : _allocator_info{allocator_info}
+    OnnxRtInputContext(const Ort::MemoryInfo& allocator_info) : _memory_info{allocator_info}
     {}
 
   public:
@@ -106,7 +106,7 @@ namespace reinforcement_learning { namespace onnx {
         }
 
         value_t* values = (value_t*)values_bytes.data();
-        result.push_back(std::move(Ort::Value::CreateTensor<value_t>(this->_allocator_info, values, values_count, dimensions, rank)));
+        result.push_back(std::move(Ort::Value::CreateTensor<value_t>(this->_memory_info, values, values_count, dimensions, rank)));
 
         succeeded = true;
       }
@@ -130,7 +130,7 @@ namespace reinforcement_learning { namespace onnx {
     std::vector<std::string> _input_names{};
     std::vector<tensor_data_t> _inputs{};
 
-    const Ort::AllocatorInfo& _allocator_info;
+    const Ort::MemoryInfo& _memory_info;
   };
 
   int read_tensor_notation(const char* tensor_notation, OnnxRtInputContext* input_context, api_status* status = nullptr);

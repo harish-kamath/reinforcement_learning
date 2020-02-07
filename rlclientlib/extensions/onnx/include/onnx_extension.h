@@ -7,7 +7,7 @@ namespace reinforcement_learning { namespace onnx {
 // Constants
 
 namespace reinforcement_learning { namespace name {
-  const char *const ONNX_THREADPOOL_SIZE      = "onnx.threadpool";
+  //TODO: Explore and expose useful configuration settings here
   const char *const ONNX_PARSE_FEATURE_STRING = "onnx.parse_feature_string";
   const char *const ONNX_OUTPUT_NAME          = "onnx.output_name";
 }}
