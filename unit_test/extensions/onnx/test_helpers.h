@@ -2,7 +2,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "onnx_extension.h"
-#include "tensor_notation.h"
+#include "onnx_input.h"
 
 #include "api_status.h"
 #include "err_constants.h"
@@ -49,7 +49,7 @@ inline void require_success(const r::api_status& status)
 }
 
 template <typename string_t>
-inline void validate_input_context(o::OnnxRtInputContext& input_context, size_t expected_count, std::vector<string_t> expected_names)
+inline void validate_input_context(o::onnx_input_builder& input_context, size_t expected_count, std::vector<string_t> expected_names)
 {
   size_t input_count = input_context.input_count();
   BOOST_REQUIRE_EQUAL(input_count, expected_count); 
@@ -58,7 +58,7 @@ inline void validate_input_context(o::OnnxRtInputContext& input_context, size_t 
   BOOST_REQUIRE_EQUAL_COLLECTIONS(names.cbegin(), names.cend(), expected_names.cbegin(), expected_names.cend());
 }
 
-inline void validate_empty(o::OnnxRtInputContext& input_context)
+inline void validate_empty(o::onnx_input_builder& input_context)
 {
   validate_input_context(input_context, 0, TestEmptyNames);
   std::vector<Ort::Value> values = input_context.inputs();
@@ -90,7 +90,7 @@ inline void validate_tensor(Ort::Value& parsed_value, dimensions expected_dimens
 }
 
 template <typename string_t>
-inline void validate_tensors(o::OnnxRtInputContext& input_context, expectations<string_t> expectations)
+inline void validate_tensors(o::onnx_input_builder& input_context, expectations<string_t> expectations)
 {
   std::map<string_t, size_t> input_name_map;
   size_t expected_input_count = input_context.input_count();

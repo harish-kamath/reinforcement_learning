@@ -2,7 +2,7 @@
 #include <sstream>
 #include <assert.h>
 
-#include "tensor_notation.h"
+#include "onnx_input.h"
 
 #include "trace_logger.h"
 #include "err_constants.h"
@@ -157,10 +157,10 @@ namespace reinforcement_learning { namespace onnx {
     Ort::MemoryInfo memory_info = Ort::MemoryInfo::CreateCpu(OrtAllocatorType::OrtArenaAllocator, 
                                                              OrtMemType::OrtMemTypeDefault);
     
-    OnnxRtInputContext input_context(memory_info);
+    onnx_input_builder input_context(memory_info);
     if (_parse_feature_string)
     {
-      RETURN_IF_FAIL(read_tensor_notation(features, &input_context, status));
+      RETURN_IF_FAIL(read_tensor_notation(features, input_context, status));
     }
     else
     {
